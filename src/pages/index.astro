@@ -1,0 +1,451 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { SITE, UI } from '../config/site';
+import { sortPosts } from '../utils/posts';
+
+const allPosts = sortPosts(await getCollection('posts'));
+
+const mainPosts = allPosts.filter((p) => !(p.data.ctf || '').startsWith('HTB'));
+const latestPosts = mainPosts.slice(0, 3);
+const writeupCount = allPosts.filter((p) => p.data.category === 'writeup').length;
+const articleCount = allPosts.filter((p) => p.data.category === 'article').length;
+---
+
+<BaseLayout title={SITE.title} description={SITE.description.vi}>
+  <div class="mx-auto mt-6 flex max-w-6xl flex-col gap-10 px-4 pb-10">
+
+    <section class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+
+      <div class="hud-panel flex flex-col justify-between p-6 sm:p-8 lg:col-span-8">
+        <div>
+
+          <div
+            class="mb-5 flex items-center justify-between gap-3 border-b pb-3 font-mono text-xs"
+            style="border-color: var(--border-subtle);"
+          >
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-2 w-2" style="background: var(--pink); box-shadow: 0 0 8px var(--pink);"></span>
+              <span style="color: var(--cyan);">CONNECTED TO // {SITE.handle.toUpperCase()}.ARCHIVE</span>
+            </div>
+            <div class="hidden items-center gap-2 sm:flex">
+              <span class="hazard-stripe inline-block h-2.5 w-14"></span>
+              <span style="color: var(--text-muted);">SYS.2077</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs tracking-widest" style="color: var(--pink);">
+            ACTIVE_SESSION // WELCOME
+          </div>
+          <h1
+            class="font-display chromatic-title mt-2 text-3xl font-black tracking-wider sm:text-5xl"
+            style="color: var(--text);"
+            data-netrunner-badge
+          >
+            NETRUNNER #----
+          </h1>
+
+          <p class="mt-3 max-w-xl text-sm leading-relaxed sm:text-base" style="color: var(--text-muted);">
+            <span data-lang-only="vi">{SITE.terminal.tagline.vi}</span>
+            <span data-lang-only="en">{SITE.terminal.tagline.en}</span>
+          </p>
+
+          <div
+            class="mt-5 border p-3.5 font-mono text-xs"
+            style="border-color: var(--border); background: var(--code-bg);"
+          >
+            <div id="mini-term-output" class="max-h-28 space-y-1 overflow-y-auto" style="color: var(--text-muted);"></div>
+            <form id="mini-term-form" class="flex items-center gap-2" style="border-color: var(--border-subtle);">
+              <label for="mini-term-input" class="shrink-0" style="color: var(--pink);">
+                {SITE.terminal.prompt}
+              </label>
+              <input
+                id="mini-term-input"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="..."
+                class="w-full bg-transparent font-mono text-xs outline-none"
+                style="color: var(--cyan);"
+              />
+            </form>
+          </div>
+        </div>
+
+        <div
+          id="spotify-feed-bar"
+          data-discord-id={SITE.presence.discordUserId}
+          data-fallback-title={SITE.presence.fallbackTrack.title}
+          data-fallback-artist={SITE.presence.fallbackTrack.artist}
+          data-fallback-url={SITE.presence.fallbackTrack.url}
+          class="mt-5 border transition-colors"
+          style="border-color: var(--border-subtle); background: var(--surface-solid);"
+        >
+          <div class="flex items-center justify-between gap-3 px-3.5 py-2.5">
+            <a
+              id="spotify-track-link"
+              href={SITE.presence.fallbackTrack.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex min-w-0 flex-1 items-center gap-3"
+            >
+              <img
+                id="spotify-art"
+                src=""
+                alt=""
+                class="hidden h-9 w-9 shrink-0 border object-cover"
+                style="border-color: var(--border);"
+              />
+              <div id="spotify-eq" class="flex h-4 w-4 shrink-0 items-end justify-center gap-[2px]">
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+              </div>
+
+              <div class="min-w-0 leading-tight">
+                <div class="flex items-center gap-2 font-mono text-[0.68rem] tracking-wider">
+                  <span id="spotify-label" style="color: var(--pink);">AUDIO_FEED // STANDBY</span>
+                  <span id="discord-state" class="hidden sm:inline" style="color: var(--text-muted);"></span>
+                </div>
+                <div
+                  id="spotify-track"
+                  class="mt-0.5 truncate text-xs font-semibold transition-colors group-hover:text-[var(--cyan)] sm:text-sm"
+                  style="color: var(--text);"
+                >
+                  {SITE.presence.fallbackTrack.title} — {SITE.presence.fallbackTrack.artist}
+                </div>
+              </div>
+            </a>
+
+            <div class="flex shrink-0 items-center gap-2.5">
+              <button
+                id="spotify-embed-toggle"
+                type="button"
+                aria-expanded="false"
+                class="chamfer-sm cursor-pointer border px-2.5 py-1 font-mono text-[0.68rem] font-bold tracking-wider transition-colors hover:bg-[var(--cyan)] hover:text-[#07080f]"
+                style="border-color: var(--cyan); color: var(--cyan);"
+              >
+                PLAY
+              </button>
+              <span
+                id="discord-dot"
+                class="h-2 w-2 shrink-0"
+                style="background: var(--text-muted);"
+                title="Discord status"
+              ></span>
+            </div>
+          </div>
+
+          <div
+            id="spotify-embed-wrap"
+            class="hidden border-t p-2"
+            style="border-color: var(--border-subtle); background: var(--code-bg);"
+          >
+            <iframe
+              id="spotify-embed-iframe"
+              title="Spotify Player"
+              width="100%"
+              height="80"
+              frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              class="block"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hud-panel flex flex-col justify-between gap-5 p-5 sm:p-6 lg:col-span-4">
+        <div class="flex items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-subtle);">
+          <div class="font-mono text-xs leading-relaxed">
+            <div style="color: var(--cyan);">{SITE.terminal.status}</div>
+            <div class="text-[0.72rem]" style="color: var(--text-muted);">{SITE.terminal.sector}</div>
+            <div class="mt-2 flex items-center gap-3">
+              <span>
+                <strong style="color: var(--cyan);">{writeupCount}</strong>{' '}
+                <span style="color: var(--text-muted);">WRITEUPS</span>
+              </span>
+              <span>
+                <strong style="color: var(--pink);">{articleCount}</strong>{' '}
+                <span style="color: var(--text-muted);">NOTES</span>
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            data-lunar-trigger
+            onclick="window.__triggerLunarDream && window.__triggerLunarDream()"
+            title="384,400 KM // Click the Moon"
+            aria-label="Activate Lunar Dream Easter Egg"
+            class="group cursor-pointer rounded-full p-1 transition-transform hover:scale-110"
+          >
+            <svg
+              class="h-16 w-16 shrink-0"
+              viewBox="0 0 80 80"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="40" cy="40" r="34" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4" />
+              <circle cx="40" cy="40" r="24" stroke="var(--cyan)" stroke-width="1" stroke-opacity="0.6" />
+              <path
+                d="M44 22A18 18 0 1 0 58 46A14 14 0 1 1 44 22Z"
+                fill="var(--pink)"
+                class="transition-opacity group-hover:opacity-100"
+                fill-opacity="0.88"
+              />
+              <line x1="40" y1="2" x2="40" y2="10" stroke="var(--cyan)" stroke-width="1.5" />
+              <line x1="40" y1="70" x2="40" y2="78" stroke="var(--cyan)" stroke-width="1.5" />
+              <line x1="2" y1="40" x2="10" y2="40" stroke="var(--cyan)" stroke-width="1.5" />
+              <line x1="70" y1="40" x2="78" y2="40" stroke="var(--cyan)" stroke-width="1.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between font-mono text-xs">
+            <span style="color: var(--pink);">// {UI.en.aboutLabel}</span>
+            <span style="color: var(--text-muted);">384,400 KM</span>
+          </div>
+
+          <p class="text-sm leading-relaxed" style="color: var(--text-muted);">
+            <span data-lang-only="vi">{SITE.about.short.vi}</span>
+            <span data-lang-only="en">{SITE.about.short.en}</span>
+          </p>
+
+          <div class="pt-1">
+            <a
+              href="/about/"
+              class="inline-flex items-center gap-1.5 font-mono text-xs transition-colors hover:text-[var(--cyan)]"
+              style="color: var(--pink);"
+            >
+              &gt; cat /about/dossier.md
+            </a>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    {
+      latestPosts.length > 0 && (
+        <section>
+          <div class="mb-6 flex items-center gap-4">
+            <h2 class="font-display flex shrink-0 items-center gap-2 text-xl font-extrabold tracking-widest sm:text-2xl">
+              <span style="color: var(--pink);">//</span>
+              <span data-lang-only="vi" style="color: var(--text);">{UI.vi.latestPostsTitle}</span>
+              <span data-lang-only="en" style="color: var(--text);">{UI.en.latestPostsTitle}</span>
+            </h2>
+            <div class="monowire-line h-[2px] flex-1" />
+            <a
+              href="/posts/"
+              class="chamfer-sm shrink-0 border px-3 py-1.5 font-mono text-xs tracking-wider transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+              style="border-color: var(--border-subtle); color: var(--text-muted);"
+            >
+              <span data-lang-only="vi">{UI.vi.viewAllPosts}</span>
+              <span data-lang-only="en">{UI.en.viewAllPosts}</span>
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {latestPosts.map((post) => <PostCard post={post} />)}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  (() => {
+
+    const feedBar = document.getElementById('spotify-feed-bar');
+    if (feedBar instanceof HTMLElement) {
+      const discordId = (feedBar.dataset.discordId || '').trim();
+      const trackLink = document.getElementById('spotify-track-link');
+      const labelEl = document.getElementById('spotify-label');
+      const trackEl = document.getElementById('spotify-track');
+      const eqEl = document.getElementById('spotify-eq');
+      const artEl = document.getElementById('spotify-art');
+      const dotEl = document.getElementById('discord-dot');
+      const stateEl = document.getElementById('discord-state');
+      const embedBtn = document.getElementById('spotify-embed-toggle');
+      const embedWrap = document.getElementById('spotify-embed-wrap');
+      const embedIframe = document.getElementById('spotify-embed-iframe');
+
+      function extractTrackId(url) {
+        const m = (url || '').match(/track\/([a-zA-Z0-9]+)/);
+        return m ? m[1] : '';
+      }
+
+      let currentTrackId = extractTrackId(feedBar.dataset.fallbackUrl || '');
+      let embedOpen = false;
+
+      function syncEmbedSrc() {
+        if (!(embedIframe instanceof HTMLIFrameElement)) return;
+        if (embedOpen && currentTrackId) {
+          const nextSrc = `https://open.spotify.com/embed/track/${encodeURIComponent(currentTrackId)}?utm_source=generator&theme=0`;
+          if (embedIframe.src !== nextSrc) embedIframe.src = nextSrc;
+        } else {
+          embedIframe.src = '';
+        }
+      }
+
+      if (embedBtn && embedWrap) {
+        embedBtn.addEventListener('click', () => {
+          embedOpen = !embedOpen;
+          embedWrap.classList.toggle('hidden', !embedOpen);
+          embedBtn.textContent = embedOpen ? 'CLOSE' : 'PLAY';
+          embedBtn.setAttribute('aria-expanded', String(embedOpen));
+          syncEmbedSrc();
+        });
+      }
+
+      const statusColors = {
+        online: '#00f0ff',
+        idle: '#fcee09',
+        dnd: '#ff2a85',
+        offline: '#6b7280',
+      };
+
+      async function pollLanyard() {
+        if (!discordId || document.hidden) return;
+        try {
+          const res = await fetch(`https://api.lanyard.rest/v1/users/${encodeURIComponent(discordId)}`);
+          if (!res.ok) return;
+          const json = await res.json();
+          const data = json?.data;
+          if (!data) return;
+
+          const st = data.discord_status || 'offline';
+          if (dotEl) {
+            dotEl.style.background = statusColors[st] || statusColors.offline;
+            dotEl.style.boxShadow = st !== 'offline' ? `0 0 8px ${statusColors[st]}` : 'none';
+            dotEl.title = `Discord: ${st}`;
+          }
+          if (stateEl) {
+            stateEl.textContent = `// ${st.toUpperCase()}`;
+          }
+
+          if (data.listening_to_spotify && data.spotify) {
+            const sp = data.spotify;
+            if (labelEl) {
+              labelEl.textContent = 'SPOTIFY // NOW_PLAYING';
+              labelEl.style.color = 'var(--cyan)';
+            }
+            if (trackEl) {
+              trackEl.textContent = `${sp.song} — ${sp.artist}`;
+            }
+            if (sp.track_id) {
+              currentTrackId = sp.track_id;
+              if (trackLink instanceof HTMLAnchorElement) {
+                trackLink.href = `https://open.spotify.com/track/${encodeURIComponent(sp.track_id)}`;
+              }
+              if (embedOpen) syncEmbedSrc();
+            }
+            if (
+              artEl instanceof HTMLImageElement &&
+              typeof sp.album_art_url === 'string' &&
+              sp.album_art_url.startsWith('https://')
+            ) {
+              artEl.src = sp.album_art_url;
+              artEl.alt = sp.album || sp.song;
+              artEl.classList.remove('hidden');
+            }
+            eqEl?.classList.add('eq-live');
+          } else {
+            if (labelEl) {
+              labelEl.textContent = 'AUDIO_FEED // STANDBY';
+              labelEl.style.color = 'var(--pink)';
+            }
+            if (trackEl) {
+              trackEl.textContent = `${feedBar.dataset.fallbackTitle} — ${feedBar.dataset.fallbackArtist}`;
+            }
+            currentTrackId = extractTrackId(feedBar.dataset.fallbackUrl || '');
+            if (trackLink instanceof HTMLAnchorElement) {
+              trackLink.href = feedBar.dataset.fallbackUrl || '#';
+            }
+            if (embedOpen) syncEmbedSrc();
+            artEl?.classList.add('hidden');
+            eqEl?.classList.remove('eq-live');
+          }
+        } catch {}
+      }
+
+      if (discordId) {
+        pollLanyard();
+        setInterval(pollLanyard, 20000);
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) pollLanyard();
+        });
+      }
+    }
+
+    const form = document.getElementById('mini-term-form');
+    const input = document.getElementById('mini-term-input');
+    const out = document.getElementById('mini-term-output');
+    if (!form || !input || !out) return;
+
+    function appendLine(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const raw = input.value.trim();
+      input.value = '';
+      if (!raw) return;
+
+      const cmd = raw.toLowerCase();
+      appendLine(`<span style="color:var(--pink)">$</span> <span style="color:var(--text)">${escapeHtml(raw)}</span>`);
+
+      if (cmd === 'help') {
+        appendLine('commands: <span style="color:var(--cyan)">whoami</span>, <span style="color:var(--cyan)">ls</span>, <span style="color:var(--cyan)">cd</span>, <span style="color:var(--cyan)">cat flag.txt</span>, <span style="color:var(--pink)">lucy</span>, <span style="color:var(--yellow)">sandevistan</span>, <span style="color:var(--cyan)">reroll</span>, <span style="color:var(--cyan)">clear</span>');
+      } else if (cmd === 'whoami') {
+        const badge = document.querySelector('[data-netrunner-badge]')?.textContent || 'NETRUNNER #0000';
+        appendLine(`<span style="color:var(--yellow)">${escapeHtml(badge)}</span> // clearance: GUEST_DIVER`);
+      } else if (cmd === 'ls') {
+        appendLine('<span style="color:var(--cyan)">posts/</span>  <span style="color:var(--cyan)">htb/</span>  <span style="color:var(--cyan)">about/</span>  flag.txt  moon.log');
+      } else if (cmd === 'cd posts' || cmd === 'cd posts/' || cmd === 'cd /posts') {
+        appendLine('<span style="color:var(--cyan)">[NAV]</span> routing -> /posts/ ...');
+        setTimeout(() => { window.location.href = '/posts/'; }, 220);
+      } else if (cmd === 'cd htb' || cmd === 'cd htb/' || cmd === 'cd /htb') {
+        appendLine('<span style="color:var(--cyan)">[NAV]</span> routing -> /htb/ ...');
+        setTimeout(() => { window.location.href = '/htb/'; }, 220);
+      } else if (cmd === 'cd about' || cmd === 'cd about/' || cmd === 'cd /about') {
+        appendLine('<span style="color:var(--cyan)">[NAV]</span> routing -> /about/ ...');
+        setTimeout(() => { window.location.href = '/about/'; }, 220);
+      } else if (cmd === 'cd ~' || cmd === 'cd /' || cmd === 'cd') {
+        appendLine('<span style="color:var(--text-muted)">already at ~/</span>');
+      } else if (cmd === 'cat flag.txt') {
+        appendLine('<span style="color:var(--yellow)">kitnee{w15h_w3_c0uld_g0_t0_th3_m00n_t0g3th3r}</span>');
+      } else if (cmd === 'cat moon.log' || cmd === 'lucy') {
+        appendLine('<span style="color:var(--pink)">[LUNA_UPLINK] engaging lunar dream...</span>');
+        window.__triggerLunarDream && window.__triggerLunarDream();
+      } else if (cmd === 'sandevistan') {
+        appendLine('<span style="color:var(--yellow)">[WARN]</span> Activating Sandevistan Mk.4...');
+        window.__triggerSandevistan && window.__triggerSandevistan();
+      } else if (cmd === 'reroll') {
+        window.__rerollNetrunner && window.__rerollNetrunner();
+        const badge = document.querySelector('[data-netrunner-badge]')?.textContent || '';
+        appendLine(`re-assigned identity -> <span style="color:var(--cyan)">${escapeHtml(badge)}</span>`);
+      } else if (cmd === 'clear') {
+        out.innerHTML = '';
+      } else {
+        appendLine(`<span style="color:var(--pink)">[404] NOT_FOUND:</span> ${escapeHtml(raw)} (try <span style="color:var(--yellow)">help</span>)`);
+      }
+    });
+  })();
+</script>

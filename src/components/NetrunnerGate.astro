@@ -1,0 +1,228 @@
+---
+---
+
+<div
+  id="netrunner-gate"
+  class="fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur-md"
+  style="background: rgba(7, 8, 15, 0.86);"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="gate-title"
+>
+  <div class="hud-panel w-full max-w-md p-6 sm:p-7" style="background: var(--surface-solid);">
+    <div class="mb-4 flex items-center justify-between gap-2 border-b pb-3 font-mono text-[0.7rem]" style="border-color: var(--border-subtle);">
+      <span class="flex items-center gap-2 font-bold" style="color: var(--cyan);">
+        <span class="inline-block h-2 w-2" style="background: var(--pink); box-shadow: 0 0 8px var(--pink);"></span>
+        NEURAL_LINK // GATE
+      </span>
+      <span class="hazard-stripe inline-block h-2.5 w-12"></span>
+    </div>
+
+    <h2
+      id="gate-title"
+      class="font-display chromatic-title text-2xl font-bold tracking-wider"
+      style="color: var(--text);"
+    >
+      HUMAN VERIFICATION
+    </h2>
+
+    <div class="mt-3 space-y-1 font-mono text-xs" style="color: var(--text-muted);">
+      <p>&gt; target: <span style="color: var(--cyan);">kitnee.github.io</span></p>
+      <p>&gt; ice_check: <span id="gate-status-text" style="color: var(--pink);">AWAITING_JACK_IN</span></p>
+      <p id="gate-role-line" class="hidden">&gt; assigned_id: <strong id="gate-role-value" style="color: var(--yellow);"></strong></p>
+    </div>
+
+    <div class="mt-6">
+      <button
+        id="gate-jackin-btn"
+        type="button"
+        class="chamfer-sm relative w-full cursor-pointer overflow-hidden border py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors"
+        style="border-color: var(--yellow); background: var(--surface-2); color: var(--text);"
+      >
+        <span
+          id="gate-progress-bar"
+          class="pointer-events-none absolute inset-y-0 left-0 w-0 transition-[width] duration-75"
+          style="background: var(--yellow);"
+        ></span>
+        <span id="gate-btn-label" class="relative z-10 mix-blend-difference text-white">
+          JACK IN // VERIFY HUMAN
+        </span>
+      </button>
+
+      <div class="mt-3 text-center font-mono text-[0.68rem]" style="color: var(--text-muted);">
+        <span data-lang-only="vi">Giữ chặt nút đến 100% để xác thực</span>
+        <span data-lang-only="en">Hold button until 100% to verify</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const gate = document.getElementById('netrunner-gate');
+    if (!gate) return;
+
+    const ROLE_KEY = 'kitnee-netrunner-id';
+    const SESSION_KEY = 'kitnee-jacked-in';
+
+    function generateId() {
+      const n = Math.floor(1000 + Math.random() * 9000);
+      return `NETRUNNER #${n}`;
+    }
+
+    function getOrCreateRole() {
+      try {
+        let id = localStorage.getItem(ROLE_KEY);
+        if (!id || !/^NETRUNNER #\d{4}$/.test(id)) {
+          id = generateId();
+          localStorage.setItem(ROLE_KEY, id);
+        }
+        return id;
+      } catch {
+        return generateId();
+      }
+    }
+
+    function syncBadges(role) {
+      document.querySelectorAll('[data-netrunner-badge]').forEach((el) => {
+        el.textContent = role;
+      });
+    }
+
+    let alreadyIn = false;
+    try {
+      alreadyIn = sessionStorage.getItem(SESSION_KEY) === '1';
+    } catch {}
+
+    const existingRole = getOrCreateRole();
+    syncBadges(existingRole);
+
+    window.__rerollNetrunner = () => {
+      const next = generateId();
+      try {
+        localStorage.setItem(ROLE_KEY, next);
+      } catch {}
+      syncBadges(next);
+    };
+
+    if (alreadyIn) {
+      gate.classList.add('hidden');
+      gate.setAttribute('aria-hidden', 'true');
+      return;
+    }
+
+    document.body.classList.add('overflow-hidden');
+
+    const btn = document.getElementById('gate-jackin-btn');
+    const bar = document.getElementById('gate-progress-bar');
+    const statusText = document.getElementById('gate-status-text');
+    const roleLine = document.getElementById('gate-role-line');
+    const roleVal = document.getElementById('gate-role-value');
+    const btnLabel = document.getElementById('gate-btn-label');
+
+    let holding = false;
+    let progress = 0;
+    let lastTs = 0;
+    let rafId = 0;
+    let done = false;
+
+    const FILL_MS = 850;
+    const DRAIN_MS = 450;
+
+    function finishGate(role) {
+      if (done) return;
+      done = true;
+      holding = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      try {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        localStorage.setItem(ROLE_KEY, role);
+      } catch {}
+      syncBadges(role);
+      if (statusText) {
+        statusText.textContent = 'HUMAN_CONFIRMED';
+        statusText.style.color = 'var(--cyan)';
+      }
+      if (roleVal) roleVal.textContent = role;
+      if (roleLine) roleLine.classList.remove('hidden');
+      if (btnLabel) btnLabel.textContent = `ACCESS GRANTED // ${role}`;
+      if (bar) bar.style.width = '100%';
+
+      setTimeout(() => {
+        gate.style.transition = 'opacity 0.25s ease';
+        gate.style.opacity = '0';
+        setTimeout(() => {
+          gate.classList.add('hidden');
+          gate.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('overflow-hidden');
+        }, 260);
+      }, 420);
+    }
+
+    function step(now) {
+      if (done) return;
+      if (!lastTs) lastTs = now;
+      const dt = Math.min(64, now - lastTs);
+      lastTs = now;
+
+      if (holding) {
+        progress = Math.min(100, progress + (dt / FILL_MS) * 100);
+        if (bar) bar.style.width = `${progress}%`;
+        if (btnLabel) btnLabel.textContent = `SYNCING... ${Math.floor(progress)}%`;
+        if (progress >= 100) {
+          finishGate(getOrCreateRole());
+          return;
+        }
+        rafId = requestAnimationFrame(step);
+      } else {
+        progress = Math.max(0, progress - (dt / DRAIN_MS) * 100);
+        if (bar) bar.style.width = `${progress}%`;
+        if (progress > 0) {
+          rafId = requestAnimationFrame(step);
+        } else {
+          rafId = 0;
+          lastTs = 0;
+          if (btnLabel) btnLabel.textContent = 'HOLD TO JACK IN // VERIFY HUMAN';
+        }
+      }
+    }
+
+    function startHold(e) {
+      if (done) return;
+      if (e && e.cancelable) e.preventDefault();
+      holding = true;
+      lastTs = performance.now();
+      if (statusText) {
+        statusText.textContent = 'SYNCING_NEURAL_SIGNATURE...';
+        statusText.style.color = 'var(--yellow)';
+      }
+      if (!rafId) rafId = requestAnimationFrame(step);
+    }
+
+    function stopHold() {
+      if (done || !holding) return;
+      holding = false;
+      lastTs = performance.now();
+      if (progress < 100 && statusText) {
+        statusText.textContent = 'LINK_INTERRUPTED // HOLD_TO_100%';
+        statusText.style.color = 'var(--pink)';
+      }
+      if (!rafId && progress > 0) rafId = requestAnimationFrame(step);
+    }
+
+    if (btn) {
+      if (btnLabel) btnLabel.textContent = 'HOLD TO JACK IN // VERIFY HUMAN';
+      btn.addEventListener('pointerdown', startHold);
+      btn.addEventListener('pointerup', stopHold);
+      btn.addEventListener('pointerleave', stopHold);
+      btn.addEventListener('pointercancel', stopHold);
+      btn.addEventListener('keydown', (e) => {
+        if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) startHold(e);
+      });
+      btn.addEventListener('keyup', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') stopHold();
+      });
+    }
+    window.addEventListener('blur', stopHold);
+  })();
+</script>

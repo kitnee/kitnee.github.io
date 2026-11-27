@@ -1,0 +1,72 @@
+---
+---
+
+<div
+  id="image-lightbox"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Image viewer"
+>
+  <button
+    id="lightbox-close"
+    type="button"
+    aria-label="Close viewer"
+    class="absolute top-4 right-4 z-10 cursor-pointer rounded-full bg-white/10 p-2 text-white transition hover:bg-white/25"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  </button>
+
+  <img
+    id="lightbox-img"
+    src=""
+    alt=""
+    class="max-h-[90vh] max-w-[92vw] rounded object-contain shadow-2xl"
+  />
+</div>
+
+<script is:inline>
+  (() => {
+    const lightbox = document.getElementById('image-lightbox');
+    const imgEl = document.getElementById('lightbox-img');
+    const closeBtn = document.getElementById('lightbox-close');
+    if (!lightbox || !imgEl) return;
+
+    function open(src, alt) {
+      imgEl.src = src;
+      imgEl.alt = alt || '';
+      lightbox.classList.remove('hidden');
+      lightbox.classList.add('flex');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function close() {
+      lightbox.classList.add('hidden');
+      lightbox.classList.remove('flex');
+      document.body.classList.remove('overflow-hidden');
+      imgEl.src = '';
+    }
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const proseImg = target.closest('.prose-cyber img');
+      if (proseImg instanceof HTMLImageElement) {
+        open(proseImg.src, proseImg.alt);
+      } else if (target === lightbox || target.closest('#lightbox-close')) {
+        close();
+      }
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+        close();
+      }
+    });
+  })();
+</script>

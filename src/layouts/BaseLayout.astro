@@ -1,0 +1,196 @@
+---
+import '../styles/global.css';
+import LunarMonowireBackground from '../components/LunarMonowireBackground.astro';
+import NetrunnerGate from '../components/NetrunnerGate.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SearchModal from '../components/SearchModal.astro';
+import ImageLightbox from '../components/ImageLightbox.astro';
+import { SITE } from '../config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  title = SITE.title,
+  description = SITE.description.vi,
+  ogType = 'website',
+} = Astro.props;
+
+const canonicalUrl = new URL(Astro.url.pathname, SITE.url).toString();
+---
+
+<!doctype html>
+<html lang="vi" data-ui-lang="vi" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={SITE.handle} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@600;700;800;900&family=Saira:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <script is:inline>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem('kitnee-theme-v2');
+          if (savedTheme === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          } else {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+          }
+
+          const savedLang = localStorage.getItem('kitnee-lang');
+          const lang = savedLang === 'en' ? 'en' : 'vi';
+          document.documentElement.dataset.uiLang = lang;
+          document.documentElement.lang = lang;
+        } catch {}
+      })();
+</script>
+  </head>
+
+  <body class="flex min-h-screen flex-col">
+    <LunarMonowireBackground />
+    <Header />
+
+    <main class="relative z-10 flex-1">
+      <slot />
+    </main>
+
+    <div class="relative z-10">
+      <Footer />
+    </div>
+
+    <div
+      id="lucy-hud-toast"
+      class="pointer-events-none fixed right-4 bottom-5 z-50 hidden max-w-sm border px-4 py-3 font-mono text-xs shadow-2xl backdrop-blur-md"
+      style="background: var(--surface-solid); border-color: var(--pink); color: var(--text);"
+      role="status"
+    >
+      <div class="flex items-center gap-2 text-[0.7rem] font-bold" style="color: var(--cyan);">
+        <span class="inline-block h-1.5 w-1.5" style="background: var(--pink);"></span>
+        <span id="lucy-toast-title">LUNA_SIGNAL</span>
+      </div>
+      <p id="lucy-toast-msg" class="mt-1 leading-relaxed" style="color: var(--text-muted);"></p>
+    </div>
+
+    <div
+      id="lunar-dream-overlay"
+      class="pointer-events-none fixed inset-0 z-40 flex flex-col items-center justify-center px-6 text-center opacity-0 transition-opacity duration-500"
+      aria-hidden="true"
+    >
+      <p class="font-mono text-xs tracking-[0.25em]" style="color: var(--cyan);">
+        LUNA_UPLINK // 384,400 KM
+      </p>
+      <p
+        class="font-display chromatic-title mt-3 max-w-xl text-xl font-bold tracking-wider sm:text-3xl"
+        style="color: var(--text);"
+      >
+        "All I ever wanted was for you to live."
+      </p>
+      <p class="mt-4 font-mono text-[0.7rem] tracking-widest" style="color: var(--pink);">
+        [ CLICK ANYWHERE TO RETURN ]
+      </p>
+    </div>
+
+    <NetrunnerGate />
+    <SearchModal />
+    <ImageLightbox />
+
+    <script is:inline>
+      (() => {
+        if (window.__lucyEggsInit) return;
+        window.__lucyEggsInit = true;
+
+        console.log(
+          '%c KITNEE // NETRUNNER ARCHIVE ',
+          'background:#fcee09;color:#07080f;font-weight:bold;padding:4px 8px;font-family:monospace;font-size:13px;',
+        );
+        console.log(
+          '%c[ICE_BREACHED] flag: kitnee{insp3ct_th3_n3t_n3trunn3r}',
+          'color:#00f0ff;font-family:monospace;font-size:12px;',
+        );
+
+        let toastTimer = 0;
+        window.__showLucyToast = (title, msg, duration = 3400) => {
+          const toast = document.getElementById('lucy-hud-toast');
+          const tTitle = document.getElementById('lucy-toast-title');
+          const tMsg = document.getElementById('lucy-toast-msg');
+          if (!toast || !tTitle || !tMsg) return;
+          tTitle.textContent = title;
+          tMsg.textContent = msg;
+          toast.classList.remove('hidden');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
+        };
+
+        window.__triggerSandevistan = () => {
+          const root = document.documentElement;
+          root.classList.remove('sandevistan-active');
+          void root.offsetWidth;
+          root.classList.add('sandevistan-active');
+          window.__showLucyToast(
+            'SANDEVISTAN // OVERDRIVE',
+            'Neural acceleration engaged — time dilation 85%.',
+            5500,
+          );
+          setTimeout(() => root.classList.remove('sandevistan-active'), 1400);
+        };
+
+        let lunarTimer = 0;
+        function endLunarDream() {
+          clearTimeout(lunarTimer);
+          document.documentElement.classList.remove('lunar-dream');
+        }
+
+        window.__triggerLunarDream = () => {
+          const root = document.documentElement;
+          root.classList.add('lunar-dream');
+          window.dispatchEvent(new CustomEvent('lucy:shooting-stars'));
+          clearTimeout(lunarTimer);
+          lunarTimer = setTimeout(endLunarDream, 4800);
+        };
+
+        document.addEventListener('click', (e) => {
+          if (!document.documentElement.classList.contains('lunar-dream')) return;
+          const target = e.target;
+          if (target instanceof Element && target.closest('[data-lunar-trigger]')) return;
+          endLunarDream();
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && document.documentElement.classList.contains('lunar-dream')) {
+            endLunarDream();
+            return;
+          }
+          if (e.shiftKey && e.altKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            window.__triggerSandevistan();
+          }
+        });
+      })();
+</script>
+  </body>
+</html>

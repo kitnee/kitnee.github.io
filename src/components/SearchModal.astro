@@ -1,0 +1,220 @@
+---
+import { UI } from '../config/site';
+---
+
+<div
+  id="site-search-modal"
+  class="fixed inset-0 z-50 hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="site-search-title"
+  hidden
+>
+  <div id="site-search-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
+
+  <div class="relative flex min-h-full items-start justify-center px-3 pt-16 sm:pt-24">
+    <section
+      id="site-search-panel"
+      class="hud-panel relative w-full max-w-xl p-4 shadow-2xl sm:p-5"
+      style="background: var(--surface-solid);"
+    >
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 id="site-search-title" class="font-mono text-xs font-bold tracking-wider" style="color: var(--cyan);">
+          <span data-lang-only="vi">{UI.vi.searchTitle}</span>
+          <span data-lang-only="en">{UI.en.searchTitle}</span>
+        </h2>
+        <button
+          id="site-search-close"
+          type="button"
+          aria-label="Close search"
+          class="inline-flex h-7 w-7 cursor-pointer items-center justify-center border transition-colors hover:border-[var(--pink)] hover:text-[var(--pink)]"
+          style="border-color: var(--border-subtle); color: var(--text-muted);"
+        >
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="relative">
+        <svg
+          class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+          style="color: var(--cyan);"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.34-4.34" />
+        </svg>
+        <input
+          id="site-search-input"
+          type="search"
+          autocomplete="off"
+          class="w-full border py-2.5 pr-3 pl-9 font-mono text-sm outline-none focus:border-[var(--cyan)]"
+          style="background: var(--code-bg); border-color: var(--border-subtle); color: var(--text);"
+          placeholder={UI.vi.searchPlaceholder}
+          data-placeholder-vi={UI.vi.searchPlaceholder}
+          data-placeholder-en={UI.en.searchPlaceholder}
+        />
+      </div>
+
+      <div id="site-search-results" class="mt-3 max-h-80 space-y-1.5 overflow-y-auto"></div>
+      <p
+        id="site-search-status"
+        class="mt-3 font-mono text-xs"
+        style="color: var(--text-muted);"
+        data-hint-vi={UI.vi.searchHint}
+        data-hint-en={UI.en.searchHint}
+        data-empty-vi={UI.vi.searchEmpty}
+        data-empty-en={UI.en.searchEmpty}
+      >
+        {UI.vi.searchHint}
+      </p>
+    </section>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    if (window.__kitneeSearchInit) return;
+    window.__kitneeSearchInit = true;
+
+    let postsCache = null;
+    const modal = document.getElementById('site-search-modal');
+    const input = document.getElementById('site-search-input');
+    const resultsEl = document.getElementById('site-search-results');
+    const statusEl = document.getElementById('site-search-status');
+
+    function currentLang() {
+      return document.documentElement.dataset.uiLang === 'en' ? 'en' : 'vi';
+    }
+
+    function syncCopy() {
+      const lang = currentLang();
+      if (input) {
+        input.placeholder = input.getAttribute(`data-placeholder-${lang}`) || '';
+      }
+      if (statusEl && (!input || !input.value.trim())) {
+        statusEl.textContent = statusEl.getAttribute(`data-hint-${lang}`) || '';
+      }
+    }
+
+    async function loadIndex() {
+      if (postsCache) return postsCache;
+      try {
+        const res = await fetch('/search-index.json');
+        postsCache = await res.json();
+      } catch {
+        postsCache = [];
+      }
+      return postsCache;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function renderResults(query) {
+      if (!resultsEl || !statusEl) return;
+      const q = query.trim().toLowerCase();
+      const lang = currentLang();
+
+      if (!q) {
+        resultsEl.innerHTML = '';
+        statusEl.textContent = statusEl.getAttribute(`data-hint-${lang}`) || '';
+        statusEl.classList.remove('hidden');
+        return;
+      }
+
+      const items = await loadIndex();
+      const matched = items.filter((item) => {
+        const hay = `${item.title} ${item.description} ${item.tags.join(' ')} ${item.ctf || ''} ${item.excerpt}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (matched.length === 0) {
+        resultsEl.innerHTML = '';
+        statusEl.textContent = statusEl.getAttribute(`data-empty-${lang}`) || '';
+        statusEl.classList.remove('hidden');
+        return;
+      }
+
+      statusEl.classList.add('hidden');
+      resultsEl.innerHTML = matched
+        .slice(0, 8)
+        .map(
+          (item) => `
+          <a href="/posts/${encodeURIComponent(item.slug)}/" class="block border p-3 transition-colors hover:border-[var(--cyan)]" style="border-color: var(--border-subtle); background: var(--surface);">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-display font-bold text-sm" style="color: var(--text);">${escapeHtml(item.title)}</span>
+              <span class="shrink-0 font-mono text-[0.65rem] uppercase px-1.5 py-0.5" style="background: var(--pink-soft); color: var(--pink);">${escapeHtml(item.lang)}</span>
+            </div>
+            <p class="mt-1 line-clamp-1 text-xs" style="color: var(--text-muted);">${escapeHtml(item.description)}</p>
+          </a>
+        `,
+        )
+        .join('');
+    }
+
+    function openSearch() {
+      if (!modal) return;
+      syncCopy();
+      modal.hidden = false;
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      loadIndex();
+      setTimeout(() => {
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 30);
+    }
+
+    function closeSearch() {
+      if (!modal || modal.hidden) return;
+      modal.hidden = true;
+      modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    document.querySelectorAll('[data-site-search-trigger]').forEach((btn) => {
+      btn.addEventListener('click', openSearch);
+    });
+
+    if (input) {
+      input.addEventListener('input', () => renderResults(input.value));
+    }
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('#site-search-close') || target.id === 'site-search-backdrop') {
+        closeSearch();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (modal && !modal.hidden) closeSearch();
+        else openSearch();
+      } else if (e.key === 'Escape' && modal && !modal.hidden) {
+        e.preventDefault();
+        closeSearch();
+      }
+    });
+
+    window.addEventListener('kitnee:lang-change', syncCopy);
+    syncCopy();
+  })();
+</script>

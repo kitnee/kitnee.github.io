@@ -1,0 +1,269 @@
+---
+import { SITE, UI } from '../config/site';
+
+const pathname = Astro.url.pathname;
+const isHome = pathname === '/' || pathname === '';
+const isPosts = pathname.startsWith('/posts');
+const isHtb = pathname.startsWith('/htb');
+const isAbout = pathname.startsWith('/about');
+---
+
+<header
+  class="sticky top-0 z-30 w-full border-b backdrop-blur-md"
+  style="background: var(--surface); border-color: var(--border-subtle);"
+  id="main-header"
+>
+
+  <div class="monowire-line h-[2px] w-full"></div>
+
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+
+    <a href="/" class="group flex shrink-0 items-center gap-3">
+      <span
+        class="chamfer-sm inline-flex h-8 w-8 items-center justify-center font-display text-sm font-extrabold transition-transform group-hover:scale-105"
+        style="background: var(--yellow); color: var(--yellow-ink);"
+      >
+        K
+      </span>
+      <div class="flex flex-col leading-none">
+        <span class="font-display text-sm font-extrabold tracking-widest" style="color: var(--text);">
+          {SITE.handle.toUpperCase()}
+        </span>
+        <span class="mt-0.5 font-mono text-[0.66rem] tracking-widest" style="color: var(--cyan);">
+          NETRUNNER // LOG
+        </span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-2">
+      <span
+        class="hidden items-center gap-1.5 border px-2.5 py-1 font-mono text-xs tracking-wider lg:inline-flex"
+        style="border-color: var(--border); background: var(--cyan-soft); color: var(--cyan);"
+      >
+        <span class="inline-block h-1.5 w-1.5" style="background: var(--yellow);"></span>
+        <span data-netrunner-badge>NETRUNNER #----</span>
+      </span>
+
+      <nav class="hidden items-center gap-1 md:flex" aria-label="Primary">
+        <a
+          href="/"
+          class={`chamfer-sm px-3 py-1.5 font-mono text-xs tracking-wider transition-colors ${
+            isHome ? 'hud-nav-active' : 'hud-nav-link'
+          }`}
+        >
+          <span style="color: var(--pink);">01/</span>
+          <span data-lang-only="vi">{UI.vi.navHome}</span>
+          <span data-lang-only="en">{UI.en.navHome}</span>
+        </a>
+        <a
+          href="/posts/"
+          class={`chamfer-sm px-3 py-1.5 font-mono text-xs tracking-wider transition-colors ${
+            isPosts ? 'hud-nav-active' : 'hud-nav-link'
+          }`}
+        >
+          <span style="color: var(--pink);">02/</span>
+          <span data-lang-only="vi">{UI.vi.navPosts}</span>
+          <span data-lang-only="en">{UI.en.navPosts}</span>
+        </a>
+        <a
+          href="/htb/"
+          class={`chamfer-sm px-3 py-1.5 font-mono text-xs tracking-wider transition-colors ${
+            isHtb ? 'hud-nav-active' : 'hud-nav-link'
+          }`}
+        >
+          <span style="color: var(--pink);">03/</span>
+          <span>HTB</span>
+        </a>
+        <a
+          href="/about/"
+          class={`chamfer-sm px-3 py-1.5 font-mono text-xs tracking-wider transition-colors ${
+            isAbout ? 'hud-nav-active' : 'hud-nav-link'
+          }`}
+        >
+          <span style="color: var(--pink);">04/</span>
+          <span data-lang-only="vi">{UI.vi.navAbout}</span>
+          <span data-lang-only="en">{UI.en.navAbout}</span>
+        </a>
+      </nav>
+
+      <button
+        type="button"
+        data-site-search-trigger
+        aria-label="Search posts"
+        title="Search (Ctrl+K)"
+        class="chamfer-sm inline-flex h-8 cursor-pointer items-center gap-2 border px-2.5 font-mono text-xs transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+        style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--text-muted);"
+      >
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.34-4.34" />
+        </svg>
+        <span class="hidden sm:inline" data-lang-only="vi">{UI.vi.search}</span>
+        <span class="hidden sm:inline" data-lang-only="en">{UI.en.search}</span>
+      </button>
+
+      <button
+        id="lang-toggle"
+        type="button"
+        aria-label="Toggle language"
+        title="Switch VI / EN"
+        class="chamfer-sm inline-flex h-8 cursor-pointer items-center justify-center border px-2.5 font-mono text-xs transition-colors hover:border-[var(--pink)]"
+        style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--pink);"
+      >
+        <span data-lang-only="vi">VI</span>
+        <span data-lang-only="en">EN</span>
+      </button>
+
+      <button
+        id="theme-toggle"
+        type="button"
+        aria-label="Toggle theme"
+        title="Switch Night / Day"
+        class="chamfer-sm inline-flex h-8 w-8 cursor-pointer items-center justify-center border transition-colors hover:border-[var(--yellow)]"
+        style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--cyan);"
+      >
+        <svg
+          id="icon-sun"
+          class="hidden h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+        <svg
+          id="icon-moon"
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+      </button>
+
+      <button
+        id="mobile-menu-btn"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+        class="inline-flex h-8 w-8 cursor-pointer items-center justify-center border md:hidden"
+        style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--text);"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="mobile-menu-panel"
+    class="hidden border-t px-4 py-2 md:hidden"
+    style="background: var(--surface-solid); border-color: var(--border-subtle);"
+  >
+    <a
+      href="/"
+      class={`block px-3 py-2 font-mono text-xs ${isHome ? 'hud-nav-active' : 'hud-nav-link'}`}
+    >
+      01/ <span data-lang-only="vi">{UI.vi.navHome}</span><span data-lang-only="en">{UI.en.navHome}</span>
+    </a>
+    <a
+      href="/posts/"
+      class={`mt-1 block px-3 py-2 font-mono text-xs ${isPosts ? 'hud-nav-active' : 'hud-nav-link'}`}
+    >
+      02/ <span data-lang-only="vi">{UI.vi.navPosts}</span><span data-lang-only="en">{UI.en.navPosts}</span>
+    </a>
+    <a
+      href="/htb/"
+      class={`mt-1 block px-3 py-2 font-mono text-xs ${isHtb ? 'hud-nav-active' : 'hud-nav-link'}`}
+    >
+      03/ HTB
+    </a>
+    <a
+      href="/about/"
+      class={`mt-1 block px-3 py-2 font-mono text-xs ${isAbout ? 'hud-nav-active' : 'hud-nav-link'}`}
+    >
+      04/ <span data-lang-only="vi">{UI.vi.navAbout}</span><span data-lang-only="en">{UI.en.navAbout}</span>
+    </a>
+  </div>
+</header>
+
+<style>
+  .hud-nav-link {
+    color: var(--text-muted);
+  }
+  .hud-nav-link:hover {
+    color: var(--cyan);
+    background: var(--cyan-soft);
+  }
+  .hud-nav-active {
+    color: var(--cyan);
+    background: var(--cyan-soft);
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const themeBtn = document.getElementById('theme-toggle');
+    const sun = document.getElementById('icon-sun');
+    const moon = document.getElementById('icon-moon');
+
+    function syncThemeIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      if (sun) sun.classList.toggle('hidden', !isDark);
+      if (moon) moon.classList.toggle('hidden', isDark);
+    }
+
+    syncThemeIcons();
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const root = document.documentElement;
+        root.classList.add('disable-theme-transitions');
+        const nextDark = !root.classList.contains('dark');
+        root.classList.toggle('dark', nextDark);
+        root.classList.toggle('light', !nextDark);
+        try {
+          localStorage.setItem('kitnee-theme-v2', nextDark ? 'dark' : 'light');
+        } catch {}
+        syncThemeIcons();
+        requestAnimationFrame(() => root.classList.remove('disable-theme-transitions'));
+      });
+    }
+
+    const langBtn = document.getElementById('lang-toggle');
+    if (langBtn) {
+      langBtn.addEventListener('click', () => {
+        const cur = document.documentElement.dataset.uiLang === 'en' ? 'en' : 'vi';
+        const next = cur === 'vi' ? 'en' : 'vi';
+        document.documentElement.dataset.uiLang = next;
+        document.documentElement.lang = next;
+        try {
+          localStorage.setItem('kitnee-lang', next);
+        } catch {}
+        window.dispatchEvent(new CustomEvent('kitnee:lang-change', { detail: { lang: next } }));
+      });
+    }
+
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const menuPanel = document.getElementById('mobile-menu-panel');
+    if (menuBtn && menuPanel) {
+      menuBtn.addEventListener('click', () => {
+        const open = menuPanel.classList.toggle('hidden') === false;
+        menuBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
+  })();
+</script>

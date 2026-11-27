@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config/site';
+---
+
+<BaseLayout title={`404 // FLATLINED — ${SITE.handle.toUpperCase()}`}>
+  <div class="mx-auto mt-16 max-w-xl px-4">
+    <section class="hud-panel p-8 text-center">
+      <div class="hazard-stripe mx-auto mb-5 h-2 w-28"></div>
+      <p class="font-display chromatic-title text-5xl font-bold" style="color: var(--pink);">404</p>
+      <p class="mt-3 font-mono text-xs tracking-widest" style="color: var(--cyan);">
+        SIGNAL_LOST // ROUTE_NOT_FOUND
+      </p>
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <a
+          href="/"
+          class="chamfer-sm px-4 py-2 font-mono text-xs font-bold uppercase"
+          style="background: var(--yellow); color: var(--yellow-ink);"
+        >
+          HOME
+        </a>
+        <a
+          href="/posts/"
+          class="chamfer-sm border px-4 py-2 font-mono text-xs font-bold uppercase transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+          style="border-color: var(--border-subtle); color: var(--text-muted);"
+        >
+          POSTS
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="0,0 52,0 64,12 64,64 12,64 0,52" fill="#07080f" />
+  <polygon points="2,2 51,2 62,13 62,62 13,62 2,51" stroke="#00f0ff" stroke-width="2" />
+  <path d="M21 16V48M21 33L40 16M30 25L45 48" stroke="#ff2a85" stroke-width="5" stroke-linecap="square" transform="translate(2,0)" opacity="0.7" />
+  <path d="M21 16V48M21 33L40 16M30 25L45 48" stroke="#fcee09" stroke-width="5" stroke-linecap="square" />
+</svg>

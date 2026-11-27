@@ -1,0 +1,118 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../config/site';
+import { sortPosts } from '../../utils/posts';
+
+const allPosts = sortPosts(await getCollection('posts'));
+
+const sherlocks = allPosts.filter((p) => p.data.ctf === 'HTB Sherlock');
+const medium = allPosts.filter((p) => p.data.ctf === 'HTB Forensics' && p.data.difficulty === 'Medium');
+const easy = allPosts.filter((p) => p.data.ctf === 'HTB Forensics' && p.data.difficulty === 'Easy');
+const veryEasy = allPosts.filter((p) => p.data.ctf === 'HTB Forensics' && p.data.difficulty === 'Very Easy');
+
+const groups = [
+  {
+    slug: 'sherlocks',
+    code: '01',
+    title: 'Sherlocks',
+    tag: 'DFIR // IR',
+    accent: 'var(--pink)',
+    count: sherlocks.length,
+    descVi: 'Các bài điều tra sự cố (DFIR / Incident Response) dạng Sherlock: CorpDown-2, Stonks, Ruse, EasyMoney.',
+    descEn: 'Full DFIR & Incident Response Sherlock investigations: CorpDown-2, Stonks, Ruse, EasyMoney.',
+  },
+  {
+    slug: 'medium',
+    code: '02',
+    title: 'Forensics — Medium',
+    tag: 'CHALLENGE // MEDIUM',
+    accent: 'var(--yellow)',
+    count: medium.length,
+    descVi: 'Các bài HTB Forensics mức Medium: memory dump, C2 traffic, malware artifacts và phân tích sâu.',
+    descEn: 'Medium-tier HTB Forensics challenges covering memory dumps, C2 traffic, and malware artifacts.',
+  },
+  {
+    slug: 'easy',
+    code: '03',
+    title: 'Forensics — Easy',
+    tag: 'CHALLENGE // EASY',
+    accent: 'var(--cyan)',
+    count: easy.length,
+    descVi: 'Kho bài HTB Forensics mức Easy: PCAP, disk image, event log, phishing và obfuscated scripts.',
+    descEn: 'Easy-tier HTB Forensics challenges covering PCAPs, disk images, logs, and obfuscated scripts.',
+  },
+  {
+    slug: 'very-easy',
+    code: '04',
+    title: 'Forensics — Very Easy',
+    tag: 'CHALLENGE // VERY EASY',
+    accent: 'var(--cyan)',
+    count: veryEasy.length,
+    descVi: 'Các bài khởi động HTB Forensics mức Very Easy.',
+    descEn: 'Warm-up Very Easy HTB Forensics challenges.',
+  },
+];
+---
+
+<BaseLayout title={`// HTB — ${SITE.handle.toUpperCase()}`} description="HackTheBox Sherlocks & Forensics Challenges.">
+  <div class="mx-auto mt-8 max-w-6xl px-4 pb-12">
+
+    <div class="mb-8">
+      <div class="flex items-center gap-4">
+        <h1 class="font-display flex items-center gap-2 text-3xl font-extrabold tracking-widest sm:text-4xl">
+          <span style="color: var(--pink);">//</span>
+          <span style="color: var(--text);">HTB</span>
+        </h1>
+        <div class="monowire-line h-[2px] flex-1" />
+        <span class="hazard-stripe hidden h-3 w-16 sm:inline-block"></span>
+      </div>
+      <p class="mt-2 font-mono text-xs sm:text-sm" style="color: var(--text-muted);">
+        <span data-lang-only="vi">Chọn thư mục để xem danh sách writeup từng bài HackTheBox.</span>
+        <span data-lang-only="en">Select a directory to browse individual HackTheBox writeups.</span>
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {
+        groups.map((g) => (
+          <a
+            href={`/htb/${g.slug}/`}
+            class="cyber-card group flex flex-col justify-between p-6 sm:p-7"
+          >
+            <div>
+              <div class="flex items-center justify-between gap-3 font-mono text-xs">
+                <span style={`color: ${g.accent};`}>DIR_{g.code} // {g.tag}</span>
+                <span
+                  class="chamfer-sm px-2.5 py-0.5 font-bold"
+                  style="background: var(--surface-2); color: var(--text);"
+                >
+                  {g.count} LOGS
+                </span>
+              </div>
+
+              <h2
+                class="font-display mt-4 text-2xl font-bold tracking-wider transition-colors group-hover:text-[var(--cyan)]"
+                style="color: var(--text);"
+              >
+                {g.title}
+              </h2>
+
+              <p class="mt-3 text-sm leading-relaxed" style="color: var(--text-muted);">
+                <span data-lang-only="vi">{g.descVi}</span>
+                <span data-lang-only="en">{g.descEn}</span>
+              </p>
+            </div>
+
+            <div class="mt-6 flex items-center justify-between border-t pt-4 font-mono text-xs" style="border-color: var(--border-subtle);">
+              <span style="color: var(--text-muted);">/htb/{g.slug}/</span>
+              <span class="font-bold transition-colors group-hover:text-[var(--yellow)]" style={`color: ${g.accent};`}>
+                OPEN_DIR &gt;
+              </span>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

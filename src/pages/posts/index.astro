@@ -1,0 +1,346 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { SITE, UI } from '../../config/site';
+import { sortPosts } from '../../utils/posts';
+
+const allPosts = sortPosts(await getCollection('posts'));
+
+const posts = allPosts.filter((p) => !(p.data.ctf || '').startsWith('HTB'));
+
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const allTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title={`// POSTS — ${SITE.handle.toUpperCase()}`} description={SITE.description.vi}>
+  <div class="mx-auto mt-8 max-w-6xl px-4 pb-12">
+
+    <div class="mb-6">
+      <div class="flex items-center gap-4">
+        <h1 class="font-display flex items-center gap-1.5 text-3xl font-bold tracking-wider sm:text-4xl">
+          <span style="color: var(--pink);">//</span>
+          <span style="color: var(--text);">POSTS</span>
+        </h1>
+        <div class="monowire-line h-[2px] flex-1" />
+        <span class="hazard-stripe hidden h-3 w-16 sm:inline-block"></span>
+      </div>
+      <p class="mt-2 font-mono text-xs sm:text-sm" style="color: var(--text-muted);">
+        <span data-lang-only="vi">{UI.vi.postsSub}</span>
+        <span data-lang-only="en">{UI.en.postsSub}</span>
+      </p>
+    </div>
+
+    <div class="hud-panel mb-7 space-y-3 p-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <svg
+            class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+            style="color: var(--cyan);"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.34-4.34" />
+          </svg>
+          <input
+            id="posts-search-input"
+            type="search"
+            placeholder={UI.vi.filterPlaceholder}
+            data-placeholder-vi={UI.vi.filterPlaceholder}
+            data-placeholder-en={UI.en.filterPlaceholder}
+            class="w-full border py-2 pr-3 pl-9 font-mono text-sm outline-none focus:border-[var(--cyan)]"
+            style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--text);"
+          />
+        </div>
+
+        <select
+          id="posts-lang-filter"
+          aria-label="Filter by language"
+          class="cursor-pointer border px-3 py-2 font-mono text-sm outline-none focus:border-[var(--cyan)] sm:w-52"
+          style="background: var(--surface-solid); border-color: var(--border-subtle); color: var(--text);"
+        >
+          <option value="all">{UI.vi.allLangs}</option>
+          <option value="vi">{UI.vi.viLang}</option>
+          <option value="en">{UI.vi.enLang}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-1">
+        <button
+          type="button"
+          data-cat-btn="all"
+          class="filter-chip filter-chip-active chamfer-sm cursor-pointer border px-3 py-1 font-mono text-xs font-bold uppercase"
+        >
+          <span data-lang-only="vi">{UI.vi.allCategories}</span>
+          <span data-lang-only="en">{UI.en.allCategories}</span>
+        </button>
+        <button
+          type="button"
+          data-cat-btn="writeup"
+          class="filter-chip chamfer-sm cursor-pointer border px-3 py-1 font-mono text-xs font-bold uppercase"
+        >
+          Writeup
+        </button>
+        <button
+          type="button"
+          data-cat-btn="article"
+          class="filter-chip chamfer-sm cursor-pointer border px-3 py-1 font-mono text-xs font-bold uppercase"
+        >
+          Article
+        </button>
+
+        {
+          allTags.length > 0 && (
+            <>
+              <span class="mx-1 h-4 w-px" style="background: var(--border-subtle);" />
+              {allTags.map(([tag]) => (
+                <button
+                  type="button"
+                  data-tag-chip={tag.toLowerCase()}
+                  class="filter-chip cursor-pointer border px-2 py-1 font-mono text-xs"
+                >
+                  #{tag}
+                </button>
+              ))}
+            </>
+          )
+        }
+      </div>
+    </div>
+
+    <div id="posts-grid" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {posts.map((post) => <PostCard post={post} enableTagFilter={true} />)}
+    </div>
+
+    <div id="posts-empty" class="hud-panel hidden py-12 text-center">
+      <p class="font-mono text-sm" style="color: var(--text-muted);">
+        <span data-lang-only="vi">{UI.vi.noPosts}</span>
+        <span data-lang-only="en">{UI.en.noPosts}</span>
+      </p>
+      <button
+        id="posts-reset-btn"
+        type="button"
+        class="chamfer-sm mt-4 cursor-pointer px-4 py-2 font-mono text-xs font-bold uppercase"
+        style="background: var(--yellow); color: var(--yellow-ink);"
+      >
+        <span data-lang-only="vi">{UI.vi.resetFilters}</span>
+        <span data-lang-only="en">{UI.en.resetFilters}</span>
+      </button>
+    </div>
+
+    <div id="posts-pagination" class="mt-10 hidden items-center justify-center gap-3 font-mono text-xs">
+      <button
+        id="page-prev"
+        type="button"
+        class="chamfer-sm cursor-pointer border px-3.5 py-2 transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)] disabled:cursor-not-allowed disabled:opacity-40"
+        style="background: var(--surface); border-color: var(--border-subtle); color: var(--text);"
+      >
+        <span data-lang-only="vi">{UI.vi.prev}</span>
+        <span data-lang-only="en">{UI.en.prev}</span>
+      </button>
+      <span id="page-indicator" style="color: var(--cyan);">1 / 1</span>
+      <button
+        id="page-next"
+        type="button"
+        class="chamfer-sm cursor-pointer border px-3.5 py-2 transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)] disabled:cursor-not-allowed disabled:opacity-40"
+        style="background: var(--surface); border-color: var(--border-subtle); color: var(--text);"
+      >
+        <span data-lang-only="vi">{UI.vi.next}</span>
+        <span data-lang-only="en">{UI.en.next}</span>
+      </button>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .filter-chip {
+    background: var(--surface-solid);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  }
+  .filter-chip:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .filter-chip-active {
+    background: var(--yellow) !important;
+    border-color: var(--yellow) !important;
+    color: var(--yellow-ink) !important;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const PAGE_SIZE = 9;
+    const searchInput = document.getElementById('posts-search-input');
+    const langSelect = document.getElementById('posts-lang-filter');
+    const cards = Array.from(document.querySelectorAll('[data-post-card]'));
+    const emptyEl = document.getElementById('posts-empty');
+    const resetBtn = document.getElementById('posts-reset-btn');
+    const paginationEl = document.getElementById('posts-pagination');
+    const prevBtn = document.getElementById('page-prev');
+    const nextBtn = document.getElementById('page-next');
+    const indicator = document.getElementById('page-indicator');
+    const catBtns = Array.from(document.querySelectorAll('[data-cat-btn]'));
+    const tagChips = Array.from(document.querySelectorAll('[data-tag-chip]'));
+
+    let state = {
+      query: '',
+      lang: 'all',
+      category: 'all',
+      tag: '',
+      page: 1,
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tag')) {
+      state.tag = params.get('tag').toLowerCase();
+    }
+
+    function syncPlaceholder() {
+      const uiLang = document.documentElement.dataset.uiLang === 'en' ? 'en' : 'vi';
+      if (searchInput) {
+        searchInput.placeholder = searchInput.getAttribute(`data-placeholder-${uiLang}`) || '';
+      }
+    }
+
+    function updateChipsUI() {
+      catBtns.forEach((btn) => {
+        btn.classList.toggle('filter-chip-active', btn.dataset.catBtn === state.category);
+      });
+      tagChips.forEach((chip) => {
+        chip.classList.toggle('filter-chip-active', chip.dataset.tagChip === state.tag);
+      });
+    }
+
+    function applyFilters() {
+      const q = state.query.trim().toLowerCase();
+      const matched = cards.filter((card) => {
+        const title = card.dataset.title || '';
+        const desc = card.dataset.description || '';
+        const lang = card.dataset.lang || '';
+        const cat = card.dataset.category || '';
+        const tags = (card.dataset.tags || '').split(',').filter(Boolean);
+
+        if (state.lang !== 'all' && lang !== state.lang) return false;
+        if (state.category !== 'all' && cat !== state.category) return false;
+        if (state.tag && !tags.includes(state.tag)) return false;
+        if (q && !title.includes(q) && !desc.includes(q) && !tags.some((t) => t.includes(q))) {
+          return false;
+        }
+        return true;
+      });
+
+      const totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+      if (state.page > totalPages) state.page = totalPages;
+
+      const start = (state.page - 1) * PAGE_SIZE;
+      const pageItems = new Set(matched.slice(start, start + PAGE_SIZE));
+
+      cards.forEach((card) => {
+        card.classList.toggle('hidden', !pageItems.has(card));
+      });
+
+      if (emptyEl) emptyEl.classList.toggle('hidden', matched.length > 0);
+
+      if (paginationEl && indicator && prevBtn && nextBtn) {
+        const showPager = totalPages > 1;
+        paginationEl.classList.toggle('hidden', !showPager);
+        paginationEl.classList.toggle('flex', showPager);
+        indicator.textContent = `${state.page} / ${totalPages}`;
+        prevBtn.disabled = state.page <= 1;
+        nextBtn.disabled = state.page >= totalPages;
+      }
+
+      updateChipsUI();
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        state.query = searchInput.value;
+        state.page = 1;
+        applyFilters();
+      });
+    }
+
+    if (langSelect) {
+      langSelect.addEventListener('change', () => {
+        state.lang = langSelect.value;
+        state.page = 1;
+        applyFilters();
+      });
+    }
+
+    catBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.category = btn.dataset.catBtn || 'all';
+        state.page = 1;
+        applyFilters();
+      });
+    });
+
+    tagChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const t = chip.dataset.tagChip || '';
+        state.tag = state.tag === t ? '' : t;
+        state.page = 1;
+        applyFilters();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const cardTagBtn = target.closest('[data-filter-tag]');
+      if (cardTagBtn) {
+        const t = cardTagBtn.getAttribute('data-filter-tag') || '';
+        state.tag = state.tag === t ? '' : t;
+        state.page = 1;
+        applyFilters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        state = { query: '', lang: 'all', category: 'all', tag: '', page: 1 };
+        if (searchInput) searchInput.value = '';
+        if (langSelect) langSelect.value = 'all';
+        applyFilters();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (state.page > 1) {
+          state.page -= 1;
+          applyFilters();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        state.page += 1;
+        applyFilters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    window.addEventListener('kitnee:lang-change', syncPlaceholder);
+    syncPlaceholder();
+    applyFilters();
+  })();
+</script>

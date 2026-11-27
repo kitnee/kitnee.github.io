@@ -1,0 +1,236 @@
+---
+title: "Event Horizon"
+description: "Our CEO's computer was compromised in a phishing attack. The attackers took care to clear the PowerShell logs, so we don't know what they executed. Can you help us?"
+pubDate: 2026-04-06
+lang: en
+category: writeup
+ctf: "HTB Forensics"
+difficulty: "Easy"
+tags:
+  - "Writeup"
+  - "Forensics"
+  - "HTB"
+  - "Easy"
+---
+
+### 1. Analysis
+* **Given:** `Logs` and `TraceFormat` folder
+* **Description:** Our CEO's computer was compromised in a phishing attack. The attackers took care to clear the PowerShell logs, so we don't know what they executed. Can you help us?
+* **Hints:**   
+    * No hints are given 
+
+### 2. Investigation
+#### EVENT HORIZON
+Since we are given the `Logs` folder, we can use `chainsaw` - a powerful tool to detect suspicious event in the machine. Because the description mentioned `Powershell`, we only hunt threats from the powershell log:
+
+```bash
+~/tools/chainsaw/chainsaw hunt "/mnt/d/sv_it/htb/Easy/Easy/Event Horizon/Logs/Microsoft-Windows-PowerShell%4Operational.evtx" -s ~/sigma-rules/rules --mapping ~/tools/chainsaw/mappings/sigma-event-logs-all.yml
+
+ ██████╗██╗  ██╗ █████╗ ██╗███╗   ██╗███████╗ █████╗ ██╗    ██╗
+██╔════╝██║  ██║██╔══██╗██║████╗  ██║██╔════╝██╔══██╗██║    ██║
+██║     ███████║███████║██║██╔██╗ ██║███████╗███████║██║ █╗ ██║
+██║     ██╔══██║██╔══██║██║██║╚██╗██║╚════██║██╔══██║██║███╗██║
+╚██████╗██║  ██║██║  ██║██║██║ ╚████║███████║██║  ██║╚███╔███╔╝
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝
+    By WithSecure Countercept (@FranticTyping, @AlexKornitzer)
+
+[+] Loading detection rules from: /home/kittne/sigma-rules/rules
+[!] Loaded 2887 detection rules (227 not loaded)
+[+] Loading forensic artefacts from: /mnt/d/sv_it/htb/Easy/Easy/Event Horizon/Logs/Microsoft-Windows-PowerShell%4Operational.evtx (extensions: .evtx, .evt)
+[+] Loaded 1 forensic artefacts (5.1 MiB)
+[+] Current Artifact: /mnt/d/sv_it/htb/Easy/Easy/Event Horizon/Logs/Microsoft-Windows-PowerShell%4Operational.evtx
+[+] Hunting [========================================] 1/1   [00:00:00]
+[+] Group: Sigma
+┌─────────────────────┬────────────────────────────────┬───────┬──────────────────────────────┬──────────┬───────────┬─────────────────┬──────────────────────────────────┐
+│      timestamp      │           detections           │ count │    Event.System.Provider     │ Event ID │ Record ID │    Computer     │            Event Data            │
+├─────────────────────┼────────────────────────────────┼───────┼──────────────────────────────┼──────────┼───────────┼─────────────────┼──────────────────────────────────┤
+│ 2020-10-22 22:06:14 │ ‣ Malicious PowerShell         │ 1     │ Microsoft-Windows-PowerShell │ 4104     │ 31        │ WIN-PTFPHFCRDJ0 │ MessageNumber: 1                 │
+│                     │ Commandlets - ScriptBlock      │       │                              │          │           │                 │ ScriptBlockText: |-              │
+│                     │ ‣ Potential Suspicious         │       │                              │          │           │                 │  <#                              │
+│                     │ PowerShell Keywords            │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  PowerUp aims to be a clearing   │
+│                     │                                │       │                              │          │           │                 │ house of common Windows privil   │
+│                     │                                │       │                              │          │           │                 │ ege escalation                   │
+│                     │                                │       │                              │          │           │                 │  vectors that rely on misconfi   │
+│                     │                                │       │                              │          │           │                 │ gurations. See README.md for m   │
+│                     │                                │       │                              │          │           │                 │ ore information.                 │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  Author: @harmj0y                │
+│                     │                                │       │                              │          │           │                 │  License: BSD 3-Clause           │
+│                     │                                │       │                              │          │           │                 │  Required Dependencies: None     │
+│                     │                                │       │                              │          │           │                 │  Optional Dependencies: None     │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  #>                              │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  #Requires -Version 2            │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  #############################   │
+│                     │                                │       │                              │          │           │                 │ ###########################      │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  # HTB{8Lu3_734m_F0r3v3R}        │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  # PSReflect code for Windows    │
+│                     │                                │       │                              │          │           │                 │ API access                       │
+│                     │                                │       │                              │          │           │                 │  # Author: @mattifestation       │
+│                     │                                │       │                              │          │           │                 │  #  https://raw.githubusercont   │
+│                     │                                │       │                              │          │           │                 │ ent.com/mattifestation/PSRefle   │
+│                     │                                │       │                              │          │           │                 │ ct/master/PSReflect.psm1         │
+│                     │                                │       │                              │          │           │                 │  #                               │
+│                     │                                │       │                              │          │           │                 │  #############################   │
+│                     │                                │       │                              │          │           │                 │ ###########################      │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  function New-InMemoryModule {   │
+│                     │                                │       │                              │          │           │                 │  <#                              │
+│                     │                                │       │                              │          │           │                 │  .SYNOPSIS                       │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  Creates an in-memory assembly   │
+│                     │                                │       │                              │          │           │                 │  and module                      │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  Author: Matthew Graeber (@mat   │
+│                     │                                │       │                              │          │           │                 │ tifestation)                     │
+│                     │                                │       │                              │          │           │                 │  License: BSD 3-Clause           │
+│                     │                                │       │                              │          │           │                 │  Required Dependencies: None     │
+│                     │                                │       │                              │          │           │                 │  Optional Dependencies: None     │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  .DESCRIPTION                    │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  When defining custom enums, s   │
+│                     │                                │       │                              │          │           │                 │ tructs, and unmanaged function   │
+│                     │                                │       │                              │          │           │                 │ s, it is                         │
+│                     │                                │       │                              │          │           │                 │  necessary to associate to an    │
+│                     │                                │       │                              │          │           │                 │ assembly module. This helper f   │
+│                     │                                │       │                              │          │           │                 │ unction                          │
+│                     │                                │       │                              │          │           │                 │  creates an in-memory module t   │
+│                     │                                │       │                              │          │           │                 │ hat can be passed to the 'enum   │
+│                     │                                │       │                              │          │           │                 │ ',                               │
+│                     │                                │       │                              │          │           │                 │  'struct', and Add-Win32Type f   │
+│                     │                                │       │                              │          │           │                 │ unctions.                        │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  .PARAMETER ModuleName           │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  Specifies the desired name fo   │
+│                     │                                │       │                              │          │           │                 │ r the in-memory assembly and m   │
+│                     │                                │       │                              │          │           │                 │ odule. If                        │
+│                     │                                │       │                              │          │           │                 │  ModuleName is not provided, i   │
+│                     │                                │       │                              │          │           │                 │ t will default to a GUID.        │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  .EXAMPLE                        │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  $Module = New-InMemoryModule    │
+│                     │                                │       │                              │          │           │                 │ -ModuleName Win32                │
+│                     │                                │       │                              │          │           │                 │  #>                              │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │    [Diagnostics.CodeAnalysis.S   │
+│                     │                                │       │                              │          │           │                 │ uppressMessageAttribute('PSUse   │
+│                     │                                │       │                              │          │           │                 │ ShouldProcessForStateChangingF   │
+│                     │                                │       │                              │          │           │                 │ unctions', '')]                  │
+│                     │                                │       │                              │          │           │                 │    [CmdletBinding()]             │
+│                     │                                │       │                              │          │           │                 │    Param (                       │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 0)]   │
+│                     │                                │       │                              │          │           │                 │      [ValidateNotNullOrEmpty()   │
+│                     │                                │       │                              │          │           │                 │ ]                                │
+│                     │                                │       │                              │          │           │                 │      [String]                    │
+│                     │                                │       │                              │          │           │                 │      $ModuleName = [Guid]::New   │
+│                     │                                │       │                              │          │           │                 │ Guid().ToString()                │
+│                     │                                │       │                              │          │           │                 │    )                             │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │    $AppDomain = [Reflection.As   │
+│                     │                                │       │                              │          │           │                 │ sembly].Assembly.GetType('Syst   │
+│                     │                                │       │                              │          │           │                 │ em.AppDomain').GetProperty('Cu   │
+│                     │                                │       │                              │          │           │                 │ rrentDomain').GetValue($null,    │
+│                     │                                │       │                              │          │           │                 │ @())                             │
+│                     │                                │       │                              │          │           │                 │    $LoadedAssemblies = $AppDom   │
+│                     │                                │       │                              │          │           │                 │ ain.GetAssemblies()              │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │    foreach ($Assembly in $Load   │
+│                     │                                │       │                              │          │           │                 │ edAssemblies) {                  │
+│                     │                                │       │                              │          │           │                 │      if ($Assembly.FullName -a   │
+│                     │                                │       │                              │          │           │                 │ nd ($Assembly.FullName.Split('   │
+│                     │                                │       │                              │          │           │                 │ ,')[0] -eq $ModuleName)) {       │
+│                     │                                │       │                              │          │           │                 │        return $Assembly          │
+│                     │                                │       │                              │          │           │                 │      }                           │
+│                     │                                │       │                              │          │           │                 │    }                             │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │    $DynAssembly = New-Object R   │
+│                     │                                │       │                              │          │           │                 │ eflection.AssemblyName($Module   │
+│                     │                                │       │                              │          │           │                 │ Name)                            │
+│                     │                                │       │                              │          │           │                 │    $Domain = $AppDomain          │
+│                     │                                │       │                              │          │           │                 │    $AssemblyBuilder = $Domain.   │
+│                     │                                │       │                              │          │           │                 │ DefineDynamicAssembly($DynAsse   │
+│                     │                                │       │                              │          │           │                 │ mbly, 'Run')                     │
+│                     │                                │       │                              │          │           │                 │    $ModuleBuilder = $AssemblyB   │
+│                     │                                │       │                              │          │           │                 │ uilder.DefineDynamicModule($Mo   │
+│                     │                                │       │                              │          │           │                 │ duleName, $False)                │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │    return $ModuleBuilder         │
+│                     │                                │       │                              │          │           │                 │  }                               │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │  # A helper function used to r   │
+│                     │                                │       │                              │          │           │                 │ educe typing while defining fu   │
+│                     │                                │       │                              │          │           │                 │ nction                           │
+│                     │                                │       │                              │          │           │                 │  # prototypes for Add-Win32Typ   │
+│                     │                                │       │                              │          │           │                 │ e.                               │
+│                     │                                │       │                              │          │           │                 │  function func {                 │
+│                     │                                │       │                              │          │           │                 │    Param (                       │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 0,    │
+│                     │                                │       │                              │          │           │                 │ Mandatory = $True)]              │
+│                     │                                │       │                              │          │           │                 │      [String]                    │
+│                     │                                │       │                              │          │           │                 │      $DllName,                   │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 1,    │
+│                     │                                │       │                              │          │           │                 │ Mandatory = $True)]              │
+│                     │                                │       │                              │          │           │                 │      [string]                    │
+│                     │                                │       │                              │          │           │                 │      $FunctionName,              │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 2,    │
+│                     │                                │       │                              │          │           │                 │ Mandatory = $True)]              │
+│                     │                                │       │                              │          │           │                 │      [Type]                      │
+│                     │                                │       │                              │          │           │                 │      $ReturnType,                │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 3)]   │
+│                     │                                │       │                              │          │           │                 │      [Type[]]                    │
+│                     │                                │       │                              │          │           │                 │      $ParameterTypes,            │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 4)]   │
+│                     │                                │       │                              │          │           │                 │      [Runtime.InteropServices.   │
+│                     │                                │       │                              │          │           │                 │ CallingConvention]               │
+│                     │                                │       │                              │          │           │                 │      $NativeCallingConvention,   │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Parameter(Position = 5)]   │
+│                     │                                │       │                              │          │           │                 │      [Runtime.InteropServices.   │
+│                     │                                │       │                              │          │           │                 │ CharSet]                         │
+│                     │                                │       │                              │          │           │                 │      $Charset,                   │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [String]                    │
+│                     │                                │       │                              │          │           │                 │      $EntryPoint,                │
+│                     │                                │       │                              │          │           │                 │                                  │
+│                     │                                │       │                              │          │           │                 │      [Switch]                    │
+│                     │                                │       │                              │          │           │                 │      $SetLastError               │
+│                     │                                │       │                              │          │           │                 │    )                             │
+# ....
+```
+
+We get the flag just like that. However with that we could't learn anything. So I open the `evtx` using Event Viewer:
+
+![](/images/posts/event-horizon/2026-04-06_02-51.png)
+
+We can see that the attacker tries to run a `.ps1` file downloaded from a gist url, and the file contains function `Invoke-Mimikatz` which is a legendary tool to extract the hash, password, ... directly from memory - `lsass.exe` process. However the windows antivirus software had detected and blocked this. **Note:** If you look close enough, the name of the `ps1` script is a base64 string, decode it will also give you the same flag we found
+
+Analyzing the log we can see more efforts of the attacker to download Mimikatz, but it all didn't work.
+
+Scrolling down the log little more, we can see alot of `warning` level event. Tracing back to the first of the sequence, we can see the script:
+
+![](/images/posts/event-horizon/2026-04-06_03-04.png)
+
+The script mentions about `PowerUp`, which is a tool used for `Privilege Escalation` in Windows. Hacker often utilizes it to find the misconfigurations to access admin, system role.
+
+At the same event we find the flag as well.
+
+So we can imagine the attack chain of attackers: Phising mentioned in the description -> Using PowerUp to escalate privilege -> Trying to dump the CEO's credential by using Mimikatz but fail -> Delete the main PowerShell log but forget about `Microsoft-Windows-PowerShell%4Operational`
+
+## 3. Solution
+1. **Result:** The flag is `HTB{8Lu3_734m_F0r3v3R}`
